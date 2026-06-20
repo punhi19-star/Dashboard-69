@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School of Education Project Tracking Dashboard</title>
+    <!-- Google Fonts: Sarabun & Kanit for modern Thai/English look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for High-performance Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Main JavaScript Logic -->
+    <script defer src="app.js"></script>
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        
+        <!-- HEADER SECTION -->
+        <header class="dashboard-header">
+            <div class="header-logo-title">
+                <div class="logo-wrapper">
+                    <i class="fa-solid fa-graduation-cap logo-icon"></i>
+                </div>
+                <div class="title-wrapper">
+                    <span class="badge badge-primary">Executive Dashboard</span>
+                    <h1>ระบบติดตามแผนงานและโครงการ</h1>
+                    <p class="subtitle">โรงเรียนสาธิตครุศาสตร์ และคณะครุศาสตร์ มหาวิทยาลัยศรีนครินทรวิโรฒ</p>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <div class="sync-status">
+                    <span class="status-dot green"></span>
+                    <span id="last-update">อัปเดตล่าสุด: กำลังโหลดข้อมูล...</span>
+                </div>
+                
+                <button id="btn-refresh" class="btn btn-secondary" title="ดึงข้อมูลล่าสุดจาก Google Sheets">
+                    <i class="fa-solid fa-arrows-rotate icon-spin-hover" id="refresh-icon"></i>
+                    <span>รีเฟรชข้อมูล</span>
+                </button>
+                
+                <button id="theme-toggle" class="btn-theme-toggle" title="สลับโหมดสี">
+                    <i class="fa-solid fa-sun icon-sun"></i>
+                    <i class="fa-solid fa-moon icon-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- KPI SUMMARY CARDS -->
+        <section class="kpi-grid">
+            <!-- Card 1: Total Projects -->
+            <div class="kpi-card glass-card">
+                <div class="kpi-card-inner">
+                    <div class="kpi-info">
+                        <span class="kpi-label">โครงการทั้งหมด</span>
+                        <h3 class="kpi-value" id="kpi-total-projects">-</h3>
+                        <span class="kpi-trend text-blue" id="kpi-project-sub">กำลังดำเนินการ - โครงการ</span>
+                    </div>
+                    <div class="kpi-icon-box bg-blue-trans">
+                        <i class="fa-solid fa-folder-open icon-blue"></i>
+                    </div>
+                </div>
+                <div class="kpi-progress-bar">
+                    <div class="kpi-progress-fill bg-blue" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- Card 2: Total Budget -->
+            <div class="kpi-card glass-card">
+                <div class="kpi-card-inner">
+                    <div class="kpi-info">
+                        <span class="kpi-label">งบประมาณจัดสรร</span>
+                        <h3 class="kpi-value" id="kpi-total-budget">-</h3>
+                        <span class="kpi-trend text-orange">งบประมาณแผนงานรวม</span>
+                    </div>
+                    <div class="kpi-icon-box bg-orange-trans">
+                        <i class="fa-solid fa-wallet icon-orange"></i>
+                    </div>
+                </div>
+                <div class="kpi-progress-bar">
+                    <div class="kpi-progress-fill bg-orange" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- Card 3: Budget Spent -->
+            <div class="kpi-card glass-card">
+                <div class="kpi-card-inner">
+                    <div class="kpi-info">
+                        <span class="kpi-label">งบประมาณใช้ไปแล้ว</span>
+                        <h3 class="kpi-value" id="kpi-spent-budget">-</h3>
+                        <span class="kpi-trend text-red" id="kpi-spent-percent">-</span>
+                    </div>
+                    <div class="kpi-icon-box bg-red-trans">
+                        <i class="fa-solid fa-receipt icon-red"></i>
+                    </div>
+                </div>
+                <div class="kpi-progress-bar">
+                    <div class="kpi-progress-fill bg-red" id="kpi-spent-progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Card 4: Budget Remaining -->
+            <div class="kpi-card glass-card">
+                <div class="kpi-card-inner">
+                    <div class="kpi-info">
+                        <span class="kpi-label">งบประมาณคงเหลือ</span>
+                        <h3 class="kpi-value" id="kpi-remaining-budget">-</h3>
+                        <span class="kpi-trend text-green" id="kpi-remaining-percent">-</span>
+                    </div>
+                    <div class="kpi-icon-box bg-green-trans">
+                        <i class="fa-solid fa-circle-dollar-to-slot icon-green"></i>
+                    </div>
+                </div>
+                <div class="kpi-progress-bar">
+                    <div class="kpi-progress-fill bg-green" id="kpi-remaining-progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Card 5: Overall Progress -->
+            <div class="kpi-card glass-card">
+                <div class="kpi-card-inner">
+                    <div class="kpi-info">
+                        <span class="kpi-label">ความคืบหน้าเฉลี่ยถ่วงน้ำหนัก</span>
+                        <h3 class="kpi-value" id="kpi-avg-progress">-</h3>
+                        <span class="kpi-trend text-purple" id="kpi-avg-progress-sub">เฉลี่ยของแผนงานภาพรวม</span>
+                    </div>
+                    <div class="kpi-icon-box bg-purple-trans">
+                        <i class="fa-solid fa-chart-line-up icon-purple"></i>
+                    </div>
+                </div>
+                <div class="kpi-progress-bar">
+                    <div class="kpi-progress-fill bg-purple" id="kpi-avg-progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DATA VISUALIZATION SECTION -->
+        <section class="charts-grid">
+            <!-- Chart Card 1: Budget vs Spent -->
+            <div class="chart-card glass-card">
+                <div class="chart-card-header">
+                    <h3><i class="fa-solid fa-chart-bar header-icon text-orange"></i>งบประมาณเปรียบเทียบกับใช้จ่ายจริง (รายโครงการ)</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart-budget-spent"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart Card 2: Budget by Workgroup -->
+            <div class="chart-card glass-card">
+                <div class="chart-card-header">
+                    <h3><i class="fa-solid fa-chart-pie header-icon text-blue"></i>สัดส่วนงบประมาณจัดสรรตามกลุ่มงาน</h3>
+                </div>
+                <div class="chart-container flex-center">
+                    <canvas id="chart-workgroup-budget"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart Card 3: Project Progress -->
+            <div class="chart-card glass-card">
+                <div class="chart-card-header">
+                    <h3><i class="fa-solid fa-chart-column header-icon text-purple"></i>ร้อยละความคืบหน้าของโครงการรายบุคคล</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart-project-progress"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart Card 4: Projects Count by Owner -->
+            <div class="chart-card glass-card">
+                <div class="chart-card-header">
+                    <h3><i class="fa-solid fa-user-gear header-icon text-green"></i>สัดส่วนโครงการจัดสรรตามผู้รับผิดชอบ</h3>
+                </div>
+                <div class="chart-container flex-center">
+                    <canvas id="chart-owner-projects"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- FILTERS & SEARCH -->
+        <section class="filters-card glass-card">
+            <div class="filters-header">
+                <h3><i class="fa-solid fa-sliders header-icon text-orange"></i>เครื่องมือคัดกรองข้อมูลโครงการ</h3>
+                <button id="btn-reset-filters" class="btn-text" title="คืนค่าตัวกรองทั้งหมด">
+                    <i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง
+                </button>
+            </div>
+            <div class="filters-grid">
+                <!-- Search Input -->
+                <div class="filter-group">
+                    <label for="filter-search"><i class="fa-solid fa-magnifying-glass"></i> ค้นหาชื่อโครงการ / ผู้รับผิดชอบ</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="filter-search" placeholder="พิมพ์คำค้นหาที่ต้องการ...">
+                        <i class="fa-solid fa-circle-xmark clear-input-icon" id="clear-search" style="display: none;"></i>
+                    </div>
+                </div>
+
+                <!-- Workgroup Filter -->
+                <div class="filter-group">
+                    <label for="filter-workgroup"><i class="fa-solid fa-briefcase"></i> จำแนกตามกลุ่มงาน</label>
+                    <select id="filter-workgroup">
+                        <option value="">-- แสดงทุกกลุ่มงาน --</option>
+                    </select>
+                </div>
+
+                <!-- Responsible Person Filter -->
+                <div class="filter-group">
+                    <label for="filter-owner"><i class="fa-solid fa-user"></i> ผู้รับผิดชอบหลัก</label>
+                    <select id="filter-owner">
+                        <option value="">-- แสดงผู้รับผิดชอบทั้งหมด --</option>
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="filter-group">
+                    <label for="filter-status"><i class="fa-solid fa-list-check"></i> สถานะดำเนินงาน</label>
+                    <select id="filter-status">
+                        <option value="">-- แสดงทุกสถานะ --</option>
+                        <option value="completed">เสร็จสิ้น (100%)</option>
+                        <option value="in_progress">กำลังดำเนินการ (1-99%)</option>
+                        <option value="not_started">ยังไม่เริ่มดำเนินการ (0%)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- DATA TABLE SECTION -->
+        <section class="table-card glass-card">
+            <div class="table-card-header">
+                <div class="table-title">
+                    <h3><i class="fa-solid fa-table-list header-icon text-blue"></i>ตารางรายงานความคืบหน้าและงบประมาณ</h3>
+                    <span class="badge badge-secondary" id="table-count-badge">พบ 0 รายการ</span>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table id="projects-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-sort="name">ชื่อโครงการ <i class="fa-solid fa-sort"></i></th>
+                            <th class="sortable" data-sort="workgroup">กลุ่มงาน <i class="fa-solid fa-sort"></i></th>
+                            <th class="sortable" data-sort="owner">ผู้รับผิดชอบ <i class="fa-solid fa-sort"></i></th>
+                            <th class="sortable num-col" data-sort="budget">งบประมาณ <i class="fa-solid fa-sort"></i></th>
+                            <th class="sortable num-col" data-sort="spent">ใช้ไปแล้ว <i class="fa-solid fa-sort"></i></th>
+                            <th class="sortable num-col" data-sort="remaining">คงเหลือ <i class="fa-solid fa-sort"></i></th>
+                            <th class="sortable" data-sort="progress">ความคืบหน้า <i class="fa-solid fa-sort"></i></th>
+                            <th>สถานะ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Dynamic rows go here -->
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <div class="loading-spinner">
+                                    <i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดและประมวลผลข้อมูล...
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="dashboard-footer">
+            <p>© 2026 โรงเรียนสาธิตครุศาสตร์ และคณะครุศาสตร์ มหาวิทยาลัยศรีนครินทรวิโรฒ | พัฒนาโดย AI Coding Assistant</p>
+            <p class="footer-links">
+                <a href="https://docs.google.com/spreadsheets/d/1D2qKUiDIZ-qfbegZzM6-fKPNBjy56Ch4ZYUUZE4qIXo/edit?usp=sharing" target="_blank">
+                    <i class="fa-solid fa-file-excel text-green"></i> ลิงก์ข้อมูลต้นทาง Google Sheets
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- PROJECT DETAIL MODAL -->
+    <div class="modal-overlay" id="details-modal">
+        <div class="modal-card glass-card">
+            <button class="modal-close" id="modal-close-btn">&times;</button>
+            <div class="modal-header">
+                <span class="badge" id="modal-workgroup-badge">กลุ่มงาน</span>
+                <h2 id="modal-project-title">รายละเอียดโครงการ</h2>
+            </div>
+            
+            <div class="modal-body">
+                <div class="modal-grid">
+                    <!-- Left column: Metrics & Info -->
+                    <div class="modal-info-col">
+                        <div class="modal-info-item">
+                            <span class="modal-label">ผู้รับผิดชอบโครงการ:</span>
+                            <span class="modal-value" id="modal-project-owner">-</span>
+                        </div>
+                        
+                        <!-- Financial Breakdown Card -->
+                        <div class="modal-financials">
+                            <h4>แผนการใช้งบประมาณ</h4>
+                            <div class="modal-fin-row">
+                                <span>งบประมาณที่จัดสรร:</span>
+                                <strong id="modal-fin-budget">-</strong>
+                            </div>
+                            <div class="modal-fin-row">
+                                <span>ใช้จ่ายจริงแล้ว:</span>
+                                <strong class="text-red" id="modal-fin-spent">-</strong>
+                            </div>
+                            <div class="modal-fin-row">
+                                <span>คงเหลือสำหรับดำเนินงาน:</span>
+                                <strong class="text-green" id="modal-fin-remaining">-</strong>
+                            </div>
+                            
+                            <div class="modal-progress-bar-wrapper">
+                                <div class="modal-progress-labels">
+                                    <span>อัตราการเบิกจ่ายงบประมาณ</span>
+                                    <span id="modal-fin-percent">-</span>
+                                </div>
+                                <div class="kpi-progress-bar">
+                                    <div class="kpi-progress-fill bg-orange" id="modal-fin-progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right column: Circular Progress Gauge -->
+                    <div class="modal-gauge-col">
+                        <div class="gauge-card">
+                            <h4>ความคืบหน้าโครงการ</h4>
+                            <div class="radial-progress-wrapper">
+                                <svg class="radial-progress" viewBox="0 0 100 100">
+                                    <circle class="radial-bg" cx="50" cy="50" r="40"></circle>
+                                    <circle class="radial-fill" id="modal-radial-fill" cx="50" cy="50" r="40"></circle>
+                                </svg>
+                                <div class="radial-text" id="modal-radial-text">0%</div>
+                            </div>
+                            <div id="modal-status-badge" class="badge">รอดำเนินงาน</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-close-action">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
